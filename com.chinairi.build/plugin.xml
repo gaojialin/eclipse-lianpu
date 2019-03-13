@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.jdt.core.IJavaElement"
+            id="com.chinairi.build.contribution1">
+         <menu
+               label="lianpubuild"
+               path="additions"
+               id="com.chinairi.build.menu1">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               label="itagbuild"
+               class="com.chinairi.build.popup.actions.NewAction"
+               menubarPath="com.chinairi.build.menu1/group1"
+               enablesFor="1"
+               id="com.chinairi.build.newAction">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>
