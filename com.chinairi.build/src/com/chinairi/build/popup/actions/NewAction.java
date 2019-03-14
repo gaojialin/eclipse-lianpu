@@ -41,20 +41,22 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.internal.Workbench;
 
 public class NewAction implements IObjectActionDelegate {
-	private static final String[] EXCLUDEPRO = new String[] { "position", "zhCNpro", "type", "isSearch",
-			"isDatatable", "scale", "entity", "field" };
-	private static final String[] DATACOLUMNEPRO = new String[] {"pattern", "key", "unit", "field",
-			"width", "className", "entity", "field" };
-	private static final String[] VIEWPRO = new String[] {"pattern", "key", "unit",
-			"width", "bindPath", "entity", "field" };
+	private static final String[] EXCLUDEPRO = new String[] { "position", "zhCNpro", "type", "isSearch", "isDatatable", "scale", "entity", "field" };
+	private static final String[] DATACOLUMNEPRO = new String[] { "pattern", "key", "unit", "field", "width", "className", "entity", "field" };
+	private static final String[] VIEWPRO = new String[] { "pattern", "key", "unit" , "bindPath" ,"colspan" };
 	private static final String classPaht = "\\src\\main\\resources\\";
 	private static final String TEPLE_JSP = "\\WebContent\\temp\\itag\\initAddPage.jsp";
+	private static final String TEPLE_QUERYVIEWJSP = "\\WebContent\\temp\\itag\\viewPage.jsp";
 	private static final String WEB_CONTENT_JSP = "\\WebContent\\jsp\\";
+	private static final String WEB_CONTENT_JSP_QUERY = "\\WebContent\\jsp\\query\\";
 	private static final String PAGENM = "\\init.jsp";
+	private static final String VIEWPAGENM = "\\view.jsp";
 	private static final String PRO_ZH_CN = "_zh_CN.properties";
 	private Shell shell;
 	private static String tempStr;
+	private static String viewpagetempStr;
 	private static String temp;
+	private static String tempa;
 	private static String parjectPath;
 	private static MessageConsoleStream printer;
 
@@ -76,50 +78,39 @@ public class NewAction implements IObjectActionDelegate {
 	 * @see IActionDelegate#run(IAction)
 	 */
 	public void run(IAction action) {
-		/*TagClass tagClass = new TagClass();
-		tagClass.getFields("");*/
 		printer = ConsoleFactory.getConsole().newMessageStream();
-		// printer.setActivateOnWrite(activate);
 		printer.println("[INFO] " + getDateStr(new Date()) + "  开始构建……");
 		FileDialog dialog = new FileDialog(shell, SWT.OPEN);
 		dialog.setText("选择数据模型文件(xls,xlsx)");
 		dialog.setFilterExtensions(new String[] { "*.*", "*.xml", "*.txt", "*.asmx" });
 		String filePath = dialog.open();
 		printer.println("[INFO] " + getDateStr(new Date()) + "  开始读取文件  " + filePath);
-		// System.out.println(getDateStr(new Date())+" 开始读取 "+filePath);
 		IProject project = getCurrentProject();
 		parjectPath = project.getLocation().toString();
 		if (filePath != null) {
 			try {
 				tempStr = getStandTemple(parjectPath + TEPLE_JSP);
+				viewpagetempStr = getStandTemple(parjectPath + TEPLE_QUERYVIEWJSP);
 				if (tempStr != null) {
 					List<PageInfo> pages = getExcelData(filePath);
 					printer.println("[INFO] " + getDateStr(new Date()) + "  文件读取成功!");
-					// System.out.println(getDateStr(new Date())+" 数据读取完毕");
 					int i = 1;
 					for (PageInfo page : pages) {
 						temp = tempStr;
-						printer.println(
-								"[INFO] " + getDateStr(new Date()) + "  正在生成第  " + i + " 个任务 ：" + page.getPagePath());
-						// System.out.println(getDateStr(new Date())+ i +
-						// "……正在生成第" + page.getPagePath());
+						tempa = viewpagetempStr;
+						printer.println("[INFO] " + getDateStr(new Date()) + "  正在生成第  " + i + " 个任务 ：" + page.getPagePath());
 						getPageInfos(page, page.getTags());
-						// System.out.println(getDateStr(new Date())+i + " Done
-						// " + 1 + page.getPagePath());
-						printer.println(
-								"[INFO] " + getDateStr(new Date()) + "  生成成功第  " + i + " 个任务 ：" + page.getPagePath()+" ("+page.getTitle()+")");
+						printer.println("[INFO] " + getDateStr(new Date()) + "  生成成功第  " + i + " 个任务 ：" + page.getPagePath() + " (" + page.getTitle() + ")");
 						i++;
 					}
-					MessageDialog.openInformation(shell, "", "😀  successed! 构建成功 ,请进行确认.😀  \n"+ "如有疑问请联系 gaojl@iri.cn");
+					MessageDialog.openInformation(shell, "", "😀  successed! 构建成功 ,请进行确认.😀  \n" + "如有疑问请联系 gaojl@iri.cn");
 				} else {
 					printer.println("[ERROR] " + getDateStr(new Date()) + "  文件读取失败!");
-					//System.out.println(getDateStr(new Date()) + " 文件读取失败");
 				}
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				printer.println("[ERROR] " + getDateStr(new Date()) + "\n"+e1.getMessage());
+				printer.println("[ERROR] " + getDateStr(new Date()) + "\n" + e1.getMessage());
 				e1.printStackTrace();
-				MessageDialog.openInformation(shell, "Error", "😭 构建失败. 😭  \n");
+				MessageDialog.openInformation(shell, "Error", "😭  构建失败. 😭  \n");
 			}
 		}
 
@@ -164,19 +155,16 @@ public class NewAction implements IObjectActionDelegate {
 									if (ExcelUtils.getValue(sheet, r, 4).toLowerCase().equals("numbertextbox")) {
 										String[] scales = value.split(",");
 										if (scales.length > 1) {
-											map.put("integerPlaces", String.valueOf(Integer.valueOf(value.split(",")[0])
-													- Integer.valueOf(value.split(",")[1])).replace(".0", ""));
+											map.put("integerPlaces", String.valueOf(Integer.valueOf(value.split(",")[0]) - Integer.valueOf(value.split(",")[1])).replace(".0", ""));
 											map.put("decimalPlaces", value.split(",")[1].replace(".0", ""));
 										} else {
 											map.put("integerPlaces", value.split(",")[0].replace(".0", ""));
 											map.put("decimalPlaces", "0");
 										}
 									} else {
-										map.put("maxLength",
-												String.valueOf(Integer.valueOf(value.split(",")[0].replace(".0", ""))));
+										map.put("maxLength", String.valueOf(Integer.valueOf(value.split(",")[0].replace(".0", ""))));
 									}
-								} else if ("name".equals(ExcelUtils.getValue(row3.getCell(c)))
-										&& !"uploadButton".equals(ExcelUtils.getValue(sheet, r, 4))
+								} else if ("name".equals(ExcelUtils.getValue(row3.getCell(c))) && !"uploadButton".equals(ExcelUtils.getValue(sheet, r, 4))
 										&& !"Y".equals(ExcelUtils.getValue(sheet, r, 5))) {
 									map.put("name", pageInfo.getEntityName() + "." + value);
 								} else {
@@ -186,8 +174,7 @@ public class NewAction implements IObjectActionDelegate {
 									map.put(ExcelUtils.getValue(row3.getCell(c)), value);
 								}
 							} else {
-								if ("dataSource".equals(ExcelUtils.getValue(row3.getCell(c)))
-										&& "select".equals(ExcelUtils.getValue(sheet, r, 4))) {
+								if ("dataSource".equals(ExcelUtils.getValue(row3.getCell(c))) && "select".equals(ExcelUtils.getValue(sheet, r, 4))) {
 									map.put("dataSource", ExcelUtils.getValue(sheet, r, 2) + "List");
 								}
 								if ("key".equals(ExcelUtils.getValue(row3.getCell(c)))) {
@@ -265,43 +252,52 @@ public class NewAction implements IObjectActionDelegate {
 	// 生成各个jsp页面
 	public static Map<String, String> getPageInfos(PageInfo page, List<Map<String, String>> data) throws IOException {
 		Map<String, String> tags = new HashMap<>();
+		Map<String, String> viewtags = new HashMap<>();
 		StringBuilder addfromtagsString = null;
-		StringBuilder datatagsString = new StringBuilder("		<i:idTemplateField>\n");
+		StringBuilder viewTagStrings = null;
+		StringBuilder viewString = new StringBuilder(""); // 查询view页面
+		StringBuilder datatagsString = new StringBuilder("		<i:idTemplateField>\n"); // 数据列表
 		String position = "";
 		Map<String, String> zhcn = new HashMap<>();
 		for (int i = 0; i <= data.size(); i++) {
 			if (i == data.size()) {
 				tags.put(position, addfromtagsString.toString());
+				viewtags.put(position, viewString.toString());
 				break;
 			}
 			Map<String, String> Tag = data.get(i);
 			StringBuilder tagStringb = new StringBuilder("			<i:" + Tag.get("type"));
 			StringBuilder DatatagString = new StringBuilder("			<i:" + getDataColumTag(Tag.get("type")));
+			StringBuilder viewTagString = new StringBuilder("			<i:" + getViewLabeTag(Tag.get("type")));
 			String tagType = Tag.get("type");
 			if (i == 0) {
-				datatagsString.append("				<i:keyField entityKey=\"" + page.getEntityName()
-						+ ".dbid\" listKey=\"dbid\" />\n		</i:idTemplateField>\n");
+				datatagsString.append("				<i:keyField entityKey=\"" + page.getEntityName() + ".dbid\" listKey=\"dbid\" />\n		</i:idTemplateField>\n");
 			}
 			// inputTag 解析
 			waveFormInput(Tag, tagStringb, tagType);
 			waveDatatable(page, datatagsString, Tag, DatatagString);
+			waveViewPage(page, viewString, Tag, viewTagString);
 			zhcn.put(Tag.get("key"), Tag.get("zhCNpro"));
 			if (StringUtils.isBlank(position) || !position.equals(Tag.get("position"))) {
 				if (StringUtils.isNotBlank(position)) {
 					tags.put(position, addfromtagsString.toString());
+					viewtags.put(position, viewTagStrings.toString());
 				}
 				addfromtagsString = new StringBuilder("");
+				viewTagStrings = new StringBuilder("");
 				// 初始化，position=""
 				addfromtagsString.append(tagStringb.toString());
+				viewTagStrings.append(viewTagString.toString());
 				position = Tag.get("position");
 			} else {
 				addfromtagsString.append(tagStringb.toString());
+				viewTagStrings.append(viewTagString.toString());
 			}
 		}
 		tags.put("dataContent", datatagsString.toString());
-		// tags.put("pagePage", "mtxx");
 		generalJspFile(page, tags);
 		generatePropertyFile(page, zhcn);
+		generalQueryJspFile(page, tags, viewtags);
 		return tags;
 	}
 
@@ -321,6 +317,23 @@ public class NewAction implements IObjectActionDelegate {
 		return inputname;
 	}
 
+	public static String getViewLabeTag(String inputname) {
+		switch (inputname.toLowerCase()) {
+		case "select":
+		case "textbox":
+		case "textarea":
+			return "stringLabel";
+		case "numbertextbox":
+			return "numberLabel";
+		case "datetextbox":
+			return "dateLabel";
+		/*
+		 * case "uploadbutton": return "downloadCommandColumn";
+		 */
+		}
+		return inputname;
+	}
+
 	/**
 	 * 生成jsp页面
 	 * 
@@ -329,16 +342,44 @@ public class NewAction implements IObjectActionDelegate {
 	 * @throws IOException
 	 */
 	public static void generalJspFile(PageInfo page, Map<String, String> map) throws IOException {
+		createPage(page, map, PAGENM);
 		File file = new File(parjectPath + WEB_CONTENT_JSP + page.getCategory() + "\\" + page.getPagePath());
 		file.mkdirs();
-		//System.out.println(file.getAbsolutePath());
-		printer.println("[INFO] " +page.getTitle());
+		System.out.println(file.getAbsolutePath());
+		printer.println("[INFO] " + page.getTitle());
 		BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsolutePath() + PAGENM));
-		map.put("title", new String(page.getTitle().getBytes("UTF-8"),"GBK"));
+		map.put("title", new String(page.getTitle().getBytes("UTF-8"), "GBK"));
 		for (String tem : map.keySet()) {
 			temp = temp.replace("%{" + tem + "}", map.get(tem));
 		}
 		bw.write(temp);
+		bw.flush();
+		bw.close();
+	}
+
+	/**
+	 * 生成查询view.jsp页面
+	 * 
+	 * @param page
+	 * @param map
+	 * @throws IOException
+	 */
+	public static void generalQueryJspFile(PageInfo page, Map<String, String> map, Map<String, String> viewmap) throws IOException {
+		//无需创建init.jsp页面   
+		//createPage(page, map, PAGENM);
+		createPage(page, viewmap, VIEWPAGENM);
+	}
+
+	private static void createPage(PageInfo page, Map<String, String> map, String pageName) throws IOException, UnsupportedEncodingException {
+		File file = new File(parjectPath + WEB_CONTENT_JSP_QUERY + page.getCategory() + "\\" + page.getPagePath());
+		file.mkdirs();
+		printer.println("[INFO] " + page.getTitle());
+		BufferedWriter bw = new BufferedWriter(new FileWriter(file.getAbsolutePath() + pageName));
+		map.put("title", new String(page.getTitle().getBytes("UTF-8"), "GBK"));
+		for (String tem : map.keySet()) {
+			tempa = tempa.replace("%{" + tem + "}", map.get(tem));
+		}
+		bw.write(tempa);
 		bw.flush();
 		bw.close();
 	}
@@ -358,8 +399,7 @@ public class NewAction implements IObjectActionDelegate {
 			System.out.println(file.getAbsolutePath());
 			BufferedWriter bw;
 			try {
-				bw = new BufferedWriter(
-						new FileWriter(file.getAbsolutePath() + "\\" + page.getClassName() + PRO_ZH_CN));
+				bw = new BufferedWriter(new FileWriter(file.getAbsolutePath() + "\\" + page.getClassName() + PRO_ZH_CN));
 				for (String key : map.keySet()) {
 					bw.write(key + "=" + writeComments(map.get(key)));
 					bw.newLine();
@@ -399,8 +439,7 @@ public class NewAction implements IObjectActionDelegate {
 					if (c == '\r' && current != len - 1 && comments.charAt(current + 1) == '\n') {
 						current++;
 					}
-					if (current == len - 1
-							|| (comments.charAt(current + 1) != '#' && comments.charAt(current + 1) != '!')) {
+					if (current == len - 1 || (comments.charAt(current + 1) != '#' && comments.charAt(current + 1) != '!')) {
 					}
 				}
 				last = current + 1;
@@ -423,8 +462,7 @@ public class NewAction implements IObjectActionDelegate {
 	}
 
 	/** A table of hex digits */
-	private static final char[] hexDigit = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
-			'F' };
+	private static final char[] hexDigit = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 	private static void waveFormInput(Map<String, String> Tag, StringBuilder tagStringb, String tagType) {
 		for (String prokey : Tag.keySet()) {
@@ -438,8 +476,15 @@ public class NewAction implements IObjectActionDelegate {
 		tagStringb.append(" />\n");
 	}
 
-	private static void waveDatatable(PageInfo page, StringBuilder datatagsString, Map<String, String> Tag,
-			StringBuilder DatatagString) {
+	/**
+	 * 组装datatable区域
+	 * 
+	 * @param page
+	 * @param datatagsString
+	 * @param Tag
+	 * @param DatatagString
+	 */
+	private static void waveDatatable(PageInfo page, StringBuilder datatagsString, Map<String, String> Tag, StringBuilder DatatagString) {
 		if ("Y".equals(Tag.get("isDatatable"))) {
 			if ("uploadButton".equals(Tag.get("type"))) {
 				DatatagString.append("  url = \"" + page.getPagePath() + "!downloadFj\"");
@@ -449,21 +494,47 @@ public class NewAction implements IObjectActionDelegate {
 					DatatagString.append(" " + prokey + "=\"" + Tag.get(prokey) + "\"");
 				}
 			}
-			
+
 			DatatagString.append(" />\n");
 			datatagsString.append(DatatagString.toString());
 		}
 	};
 
+	/**
+	 * 组装view页面
+	 * 
+	 * @param page
+	 * @param datatagsString
+	 * @param Tag
+	 * @param viewTagString
+	 */
+	private static void waveViewPage(PageInfo page, StringBuilder datatagsString, Map<String, String> Tag, StringBuilder viewTagString) {
+		if(StringUtils.isNotBlank(Tag.get("field"))){
+			Tag.put("bindPath", "detail."+Tag.get("field"));
+		}else if (StringUtils.isNotBlank(Tag.get("name"))){
+			Tag.put("bindPath", Tag.get("name").replace(page.getEntityName(), "detail"));
+		}
+		for (String prokey : Tag.keySet()) {
+			
+			if (StringUtils.isNotBlank(Tag.get(prokey)) && Arrays.toString(VIEWPRO).contains(prokey)) {
+				viewTagString.append(" " + prokey + "=\"" + Tag.get(prokey) + "\"");
+			}
+		}
+
+		viewTagString.append(" />\n");
+		datatagsString.append(viewTagString.toString());
+	};
+
 }
+
 class PageInfo {
 	private String commonClassPath;
 	private String title; // 标题
 	private String category; // 类别
-	private String pagePath;	// 页面路径
-	private String className;	// 类名称
-	private String entityName;	// 实体名称
-	
+	private String pagePath; // 页面路径
+	private String className; // 类名称
+	private String entityName; // 实体名称
+
 	private List<Map<String, String>> tags;
 
 	public String getPagePath() {
@@ -482,8 +553,6 @@ class PageInfo {
 		this.entityName = entityName;
 	}
 
-
-
 	public List<Map<String, String>> getTags() {
 		return tags;
 	}
@@ -491,7 +560,6 @@ class PageInfo {
 	public void setTags(List<Map<String, String>> tags) {
 		this.tags = tags;
 	}
-
 
 	public String getCategory() {
 		return category;
@@ -525,5 +593,3 @@ class PageInfo {
 		this.commonClassPath = commonClassPath;
 	}
 }
-
-
